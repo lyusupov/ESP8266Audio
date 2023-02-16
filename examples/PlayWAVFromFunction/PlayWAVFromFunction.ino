@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "AudioFileSourceFunction.h"
 #include "AudioGeneratorWAV.h"
-#include "AudioOutputI2SNoDAC.h"
+#include "AudioOutputI2S.h"
 
 float hz = 440.f;
 
@@ -15,10 +15,11 @@ float sine_wave(const float time) {
 
 AudioGeneratorWAV* wav;
 AudioFileSourceFunction* file;
-AudioOutputI2SNoDAC* out;
+AudioOutputI2S *out;
 
 void setup() {
-  Serial.begin(115200);
+//  WiFi.mode(WIFI_OFF); //WiFi.forceSleepBegin();
+  Serial.begin(38400);
   delay(1000);
 
   // ===== create instance with length of song in [sec] =====
@@ -63,7 +64,7 @@ void setup() {
   // you can also use the pre-defined function
   // file->addAudioGenerators(sine_wave);
 
-  out = new AudioOutputI2SNoDAC();
+  out = new AudioOutputI2S(0, AudioOutputI2S::INTERNAL_PDM /* AudioOutputI2S::INTERNAL_DAC */);
   wav = new AudioGeneratorWAV();
   wav->begin(file, out);
 }

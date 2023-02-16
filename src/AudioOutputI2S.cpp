@@ -21,6 +21,7 @@
 #include <Arduino.h>
 #ifdef ESP32
   #include "driver/i2s.h"
+  #include <driver/rtc_io.h>
 #elif defined(ARDUINO_ARCH_RP2040) || ARDUINO_ESP8266_MAJOR >= 3
   #include <I2S.h>
 #elif ARDUINO_ESP8266_MAJOR < 3
@@ -207,7 +208,7 @@ bool AudioOutputI2S::begin(bool txDAC)
       }
       else if (output_mode == INTERNAL_PDM)
       {
-#if CONFIG_IDF_TARGET_ESP32
+#if defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32S3)
         mode = (i2s_mode_t)(mode | I2S_MODE_PDM);
 #else
         return false;      
@@ -262,7 +263,7 @@ bool AudioOutputI2S::begin(bool txDAC)
       {
         audioLogger->println("ERROR: Unable to install I2S drives\n");
       }
-      if (output_mode == INTERNAL_DAC || output_mode == INTERNAL_PDM)
+      if (output_mode == INTERNAL_DAC /* || output_mode == INTERNAL_PDM */)
       {
 #if CONFIG_IDF_TARGET_ESP32
         i2s_set_pin((i2s_port_t)portNo, NULL);
@@ -270,6 +271,21 @@ bool AudioOutputI2S::begin(bool txDAC)
 #else
         return false;
 #endif
+      } else if (output_mode == INTERNAL_PDM)
+      {
+        i2s_pin_config_t pin_config = {
+            .bck_io_num = I2S_PIN_NO_CHANGE,
+            .ws_io_num = I2S_PIN_NO_CHANGE,
+            .data_out_num = 18,
+            .data_in_num = I2S_PIN_NO_CHANGE
+        };
+        i2s_set_pin((i2s_port_t)portNo, &pin_config);
+
+        //Select Gpio as Digital Gpio
+        rtc_gpio_deinit((gpio_num_t) 18);
+
+        // dac disable
+//        dac_output_disable(DAC_CHANNEL_1);
       }
       else
       {
