@@ -274,6 +274,9 @@ bool AudioOutputI2S::begin(bool txDAC)
       } else if (output_mode == INTERNAL_PDM)
       {
         i2s_pin_config_t pin_config = {
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 4, 0)
+            .mck_io_num = I2S_PIN_NO_CHANGE,
+#endif
             .bck_io_num = I2S_PIN_NO_CHANGE,
             .ws_io_num = I2S_PIN_NO_CHANGE,
             .data_out_num = 18,
